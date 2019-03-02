@@ -1,53 +1,52 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useRef, useReducer } from 'react';
 
-class TodoList extends Component {
+import useInput from '../hooks/useInput';
+import useTimer from '../hooks/useTimer';
 
-  state = {
-      todos: [],
-    inputValue: '',
-    time: 0
-  }
+function todosReducer(todos, action) {
+    switch (action.type) {
+        case 'add':
+            return [
+                ...todos,
+                action.payload,
 
-  componentDidUpdate(prevProps, prevState) {
-    const { inputValue } = this.state
-
-    if (inputValue !== prevState.inputValue) {
-        console.log('new inputValue')
+            ];
+        default:
+            return todos;
+        
     }
-  }
+}
 
-  timer = null;
+function TodoList() {
+    //const time = useTimer();
+    const todoInput = useInput();
+    const [todos, dispatch] = useReducer(todosReducer, []);
 
-  componentWillUnmount() {
-    console.log('todo list unmounting');
-    clearInterval(this.timer);
-  }
-
-  handleChange = (event) => {
-      this.setState({
-          inputValue: event.target.value
-      });
-  }
-
-  componentDidMount() {
-    this.timer = setInterval(() => {
-        this.setState(prevState => ({
-            time: prevState.time + 1,
-        }))
-    }, 1000);
-  }
-    render() {
-
-        const { inputValue, time } = this.state;
-        return (
-            <>
-                <h1>Todos- current time: {time}</h1>
-                <form>
-                    <input value={inputValue} onChange={this.handleChange} />
-                </form>
-            </>
-        )
+    function handleSubmit(e) {
+        e.preventDefault();
+        dispatch({
+            type: 'add',
+            payload: todoInput.value
+        });
+        todoInput.cancel();
     }
-};
 
+    return (
+        <>
+            <h1>Todos</h1>
+            {/* <p>current time:{time}</p> */}
+            <form onSubmit={handleSubmit}>
+            <input 
+                value={todoInput.value} 
+                onChange={todoInput.handleChange}
+            />
+            <button type="submit">Submit</button>
+            <button type="button"onClick={todoInput.cancel}>Cancel</button>
+            </form>
+            <ul>
+                {todos.map(todo => <li>{todo}</li>)}
+            </ul>
+        </>
+    )
+}
 export default TodoList;
